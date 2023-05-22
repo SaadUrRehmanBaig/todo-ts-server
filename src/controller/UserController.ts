@@ -25,10 +25,13 @@ export const signUp: RequestHandler = async (req: Request<any, any, signUpBody, 
 
         const hashedPassword = bcrypt.hashSync(password, salt);
 
+        const imagesPath: any = req.files
+
         await User.create({
             email,
             password: hashedPassword,
-            fullName
+            fullName,
+            image: imagesPath && imagesPath.user_image && imagesPath.user_image[0] && imagesPath?.user_image[0]?.path
         });
 
         res.status(201).send("new user created!!! proceed to login");

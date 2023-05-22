@@ -6,7 +6,9 @@ import morgan from "morgan";
 import CustomError from "./errors/customError";
 import session from "express-session";
 import MongoStore from "connect-mongo";
-import cors from "cors"
+import cors from "cors";
+import uploadMiddleware from "./middleware/uploadMiddleware";
+import path from "path";
 
 const app: Express = express()
 
@@ -21,12 +23,19 @@ app.use(session({
 }))
 app.use(morgan("dev"))
 app.use(express.json())
+app.use(uploadMiddleware)
 
-routes(app)
+//For Uploads
+const __dirname1 = path.resolve();
+console.log(__dirname1);
+app.use("/uploads", express.static(path.join(__dirname1, "/uploads")));
 
 app.get("/", (req, res) => {
     res.send("Todo server running")
 })
+
+routes(app)
+
 app.use("*", (req, res, next) => {
     next(new CustomError("Endpoint Not found", 404))
 });
