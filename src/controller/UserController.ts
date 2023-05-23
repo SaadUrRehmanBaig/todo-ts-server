@@ -3,6 +3,7 @@ import CustomError from "../errors/customError";
 import RequestBodyValidationChecker from "../helper/validationChecker";
 import User from "../models/user";
 import bcrypt from "bcrypt"
+import { DeleteFile } from "../helper/Deletefile";
 
 interface signUpBody {
     email: string,
@@ -14,7 +15,8 @@ interface signUpBody {
 export const signUp: RequestHandler = async (req: Request<any, any, signUpBody, any>, res, next) => {
     try {
         RequestBodyValidationChecker(req)
-        const { email, password, fullName, confirmPassword } = req.body
+        const { password, fullName, confirmPassword } = req.body
+        const email = req.body.email.toLowerCase();
         const user = await User.findOne({ email })
 
         if (user) throw new CustomError("email already exists", 400)
@@ -48,7 +50,8 @@ interface loginBody {
 export const login: RequestHandler = async (req: Request<any, any, loginBody, any>, res, next) => {
     try {
         RequestBodyValidationChecker(req)
-        const { email, password } = req.body
+        const { password } = req.body;
+        const email = req.body.email.toLowerCase();
         const user = await User.findOne({ email }).select("+password")
 
         if (!user) throw new CustomError("No User Found", 400)
@@ -73,6 +76,44 @@ export const logout: RequestHandler = async (req, res, next) => {
             res.json({ message: 'Logout successful' });
         })
     } catch (error) {
+        next(error)
+    }
+
+}
+
+export const getProfile: RequestHandler = async (req: Request, res, next) => {
+    try {
+        const user = await User.findById(req.user?._id);
+        res.status(200).send(user)
+    } catch (error) {
+        next(error)
+    }
+
+}
+
+export const editProfile: RequestHandler = async (req: Request, res, next) => {
+    try {
+        let password;
+        const user: any = await User.findById(req.user?._id).select("+password");
+        user.fullName = req.body.fullName ?? user?.fullName
+        let imagesPath: any = req.files
+        imagesPath = imagesPath && imagesPath.user_image && imagesPath.user_image[0] && imagesPath?.user_image[0]?.path;
+        if (req.body.password && req.body.confirmPassword) {
+            if (req.body.password !== req.body.confirmPassword) throw new CustomError("password do not match", 400)
+
+            if (bcrypt.compareSync(req.body.password, user.password)) throw new CustomError("new password can not be same as old", 400)
+            const salt = bcrypt.genSaltSync(10)
+            password = bcrypt.hashSync(req.body.password, salt);
+            user.password = password;
+        }
+        imagesPath && user.image ? DeleteFile([user?.image]) : null;
+        user.image = imagesPath ?? user?.image;
+        await user.save()
+        res.status(200).send(user)
+    } catch (error) {
+        let imagesPath: any = req.files
+        imagesPath = imagesPath && imagesPath.user_image && imagesPath.user_image[0] && imagesPath?.user_image[0]?.path;
+        if (imagesPath) DeleteFile([imagesPath])
         next(error)
     }
 
