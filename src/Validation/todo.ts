@@ -1,5 +1,11 @@
 import { check } from "express-validator";
 
+export const getAllTodo = [
+    check("limit").isInt({ min: 1 }).withMessage("limit must be an integer with min value of 1"),
+    check("page").isInt({ min: 1 }).withMessage("page must be an integer with min value of 1")
+]
+
+
 export const UpdateTodo = [
     check("id")
         .notEmpty().withMessage("id is required")

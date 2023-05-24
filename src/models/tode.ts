@@ -1,4 +1,5 @@
 import mongoose, { InferSchemaType, Schema, model } from "mongoose";
+import { mongoosePagination, Pagination } from "mongoose-paginate-ts";
 
 const todoSchema = new Schema({
     title: {
@@ -16,6 +17,8 @@ const todoSchema = new Schema({
     timestamps: true
 });
 
+todoSchema.plugin(mongoosePagination)
+
 type todo = InferSchemaType<typeof todoSchema>
 
-export default model<todo>("Todo", todoSchema)
+export default model<todo, Pagination<todo>>("Todo", todoSchema)

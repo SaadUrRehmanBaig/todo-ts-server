@@ -4,7 +4,7 @@ import * as todoController from "../controller/TodoContoller";
 import * as todoValidator from "../Validation/todo"
 const router = Router()
 
-router.get("/", [AuthenticationFunction], todoController.getTodo)
+router.get("/", [AuthenticationFunction, ...todoValidator.getAllTodo], todoController.getTodo)
 router.get("/:id", [AuthenticationFunction], todoController.getSingleTodo)
 
 router.post("/", [AuthenticationFunction], todoController.postTodo)

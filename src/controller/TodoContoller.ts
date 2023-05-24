@@ -6,7 +6,16 @@ import RequestBodyValidationChecker from "../helper/validationChecker"
 
 export const getTodo = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const todo = await todoModel.find({ user: req?.user?._id })
+        RequestBodyValidationChecker(req)
+        const { limit, page } = req.query;
+        const options = {
+            query: { user: req?.user?._id },
+            sort: { createdAt: -1 },
+            limit: limit || 5,
+            page: page || 1
+        };
+        // { user: req?.user?._id }
+        const todo = await todoModel.paginate(options)
         res.send({ todo })
     } catch (error) {
         next(error)
